@@ -84,7 +84,9 @@ class Echonest
         }
 
         if (!isset($response)) {
-            throw new \Exception("Import abandoned due to " . $attempt . " failed retries");
+            throw new \Chrismou\Echonest\Exception\TooManyAttemptsException(
+                "Echonest query abandoned after " . $attempt . " failed attempts"
+            );
         }
 
         $this->setRateLimitData($response);

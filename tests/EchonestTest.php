@@ -108,7 +108,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
 
     /**
      * @test
-     * @expectedException \Exception
+     * @expectedException \Chrismou\Echonest\Exception\TooManyAttemptsException
      */
     public function it_quits_when_it_hits_the_max_retries_limit()
     {
