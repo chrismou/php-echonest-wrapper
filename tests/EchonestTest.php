@@ -9,7 +9,7 @@ use \Mockery as m;
 
 class EchonestTest extends PHPUnit_Framework_TestCase
 {
-    /** @var \Mockery\Mock */
+    /** @var \Mockery\MockInterface */
     protected $mockClient;
 
     /** @var \Chrismou\Echonest\Echonest  */
@@ -107,7 +107,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
      */
     public function it_quits_when_it_hits_the_max_retries_limit()
     {
-        $this->echonest = new Echonest($this->mockClient, $this->apiKey, 2);
+        $this->echonest = new Echonest($this->mockClient, $this->apiKey);
 
         $this->mockClient->shouldReceive('get')
             ->with($this->buildRequestUrl())
@@ -119,7 +119,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
                 )
             );
 
-        $this->echonest->query($this->resource, $this->action);
+        $this->echonest->query($this->resource, $this->action, [], true, 2);
 
         //$this->assertEquals(json_decode($this->apiResponse, true), $response);
     }

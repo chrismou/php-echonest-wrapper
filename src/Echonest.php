@@ -35,19 +35,13 @@ class Echonest
     protected $apiUrl = 'http://developer.echonest.com/api/v4/';
 
     /**
-     * @var int
-     */
-    protected $maxFailedAttemptsPerRequest;
-
-    /**
      * @param \GuzzleHttp\ClientInterface $httpClient
      * @param string $apiKey
      */
-    public function __construct(\GuzzleHttp\ClientInterface $httpClient, $apiKey, $maxFailedAttemptsPerRequest = 10)
+    public function __construct(\GuzzleHttp\ClientInterface $httpClient, $apiKey)
     {
         $this->httpClient = $httpClient;
         $this->apiKey = $apiKey;
-        $this->maxFailedAttemptsPerRequest = (int) $maxFailedAttemptsPerRequest;
     }
 
     /**
@@ -59,7 +53,7 @@ class Echonest
      * @return \stdClass
      * @throws \Exception
      */
-    public function query($resource, $action, array $params = [], $autoRateLimit = true)
+    public function query($resource, $action, array $params = [], $autoRateLimit = true, $maxAttempts = 10)
     {
         if (!isset($params['apiKey'])) {
             $params['api_key'] = $this->apiKey;
@@ -79,13 +73,12 @@ class Echonest
             usleep($this->getRateLimitDelay());
         }
 
-        for ($attempt=1; $attempt<=$this->maxFailedAttemptsPerRequest; $attempt++) {
+        for ($attempt=1; $attempt<=$maxAttempts; $attempt++) {
             try {
                 $response = $this->doRequest($requestUrl);
                 // If it hasn't thrown an exception, assume it's been successful
                 break;
             } catch (\Exception $e) {
-                //TODO: logging
                 sleep(2);
             }
         }
@@ -123,6 +116,8 @@ class Echonest
      */
     protected function getRateLimitDelay()
     {
+        $wait = 1;
+
         if ($this->lastRequestTimestamp) {
             $nextMinute = date('U', strtotime(date('Y-m-d H:i:', ((int) $this->lastRequestTimestamp + 60)).'00'));
             $now = time();
@@ -134,10 +129,8 @@ class Echonest
             } else {
                 $wait = ($diff / ($this->rateLimitRemaining-1)) * 1100000;
             }
-
-            return $wait;
         }
 
-        return 1;
+        return $wait;
     }
 }
