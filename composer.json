@@ -17,6 +17,7 @@
         "phpunit/phpunit": "~4.0",
         "mockery/mockery": "~0.9",
         "squizlabs/php_codesniffer": "*",
+        "vectorface/dunit": "^2.1",
         "codeclimate/php-test-reporter": "dev-master"
     },
     "autoload": {
