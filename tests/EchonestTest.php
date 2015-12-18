@@ -33,6 +33,9 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     /** @var string */
     protected $action;
 
+    /** @var array */
+    protected $dummyResponseHeaders;
+
     /**
      * Setup the test class
      */
@@ -44,13 +47,15 @@ class EchonestTest extends PHPUnit_Framework_TestCase
 
         $this->apiResponse = json_encode(["key" => "value"]);
 
+        $this->dummyResponseHeaders = [
+            'x-ratelimit-limit' => '2',
+            'x-ratelimit-remaining' => '2',
+            'date' => [date('Y-m-d H:i:').'00'],
+        ];
+
         $this->guzzleResponse = new Response(
             200,
-            [
-                'x-ratelimit-limit' => '2',
-                'x-ratelimit-remaining' => '2',
-                'date' => [date('Y-m-d H:i:').'00'],
-            ],
+            $this->dummyResponseHeaders,
             $this->apiResponse
         );
 

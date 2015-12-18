@@ -79,7 +79,7 @@ class Echonest
                 // If it hasn't thrown an exception, assume it's been successful
                 break;
             } catch (\Exception $e) {
-                // Exception handling?
+                // Do nothing
             }
         }
 
@@ -116,7 +116,7 @@ class Echonest
      */
     protected function getRateLimitDelay()
     {
-        $wait = 1;
+        $wait = 1.1 * 1000000;
 
         if ($this->lastRequestTimestamp) {
             $nextMinute = date('U', strtotime(date('Y-m-d H:i:', ((int) $this->lastRequestTimestamp + 60)).'00'));
@@ -124,9 +124,7 @@ class Echonest
 
             $diff = $nextMinute - $now;
 
-            if ($diff <= 0 || $this->rateLimitRemaining <= 1) {
-                $wait = 1 * 1100000;
-            } else {
+            if ($diff > 0 && $this->rateLimitRemaining > 1) {
                 $wait = ($diff / ($this->rateLimitRemaining-1)) * 1100000;
             }
         }
