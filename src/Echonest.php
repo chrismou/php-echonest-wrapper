@@ -79,7 +79,7 @@ class Echonest
                 // If it hasn't thrown an exception, assume it's been successful
                 break;
             } catch (\Exception $e) {
-                sleep(2);
+                // Exception handling?
             }
         }
 
