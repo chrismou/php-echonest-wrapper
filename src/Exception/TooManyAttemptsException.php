@@ -2,5 +2,7 @@
 
 namespace Chrismou\Echonest\Exception;
 
-class TooManyAttemptsException extends \Exception {
+class TooManyAttemptsException extends \Exception
+{
+
 }
