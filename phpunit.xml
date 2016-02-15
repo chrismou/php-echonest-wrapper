@@ -14,7 +14,7 @@
          stopOnFailure="false"
          verbose="true">
     <testsuites>
-        <testsuite name="chrismou/echonest test suite">
+        <testsuite name="echonest api wrapper test suite">
             <directory suffix=".php">./tests</directory>
         </testsuite>
     </testsuites>
