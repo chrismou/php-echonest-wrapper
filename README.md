@@ -30,11 +30,13 @@ $lastfm = new \Chrismou\Echonest(
 );
 ```
 
-The format for calls is: `$echonest->query($resource, $method, $parameters);`, where:
+The format for calls is: `$echonest->query($resource, $method, $parameters, $autoRateLimit, $maxRetries);`, where:
 
 * **resource** is the specific Echonest resource you're querying (ie, 'artist', 'genre', 'song')
 * **method** is the method specific to the resource you're calling (ie, 'search', 'profile', 'images')
-* **parameters** are the are the parameters specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
+* **parameters** (optional) are the are the parameters specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
+* **autoRateLimit** (optional) whether to let the wrapper manage rate limiting ([see below](#rate-limiting))
+* **maxRetries** (optional) how many times to attempt a request before giving up
 
 So, if you wanted to get all images for Cher, you could run:
 
