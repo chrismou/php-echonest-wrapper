@@ -49,9 +49,10 @@ class Echonest
      * @param string $action
      * @param array $params
      * @param bool $autoRateLimit
+     * @param int $maxAttempts
      *
-     * @return \stdClass
-     * @throws \Exception
+     * @return mixed
+     * @throws Exception\TooManyAttemptsException
      */
     public function query($resource, $action, array $params = [], $autoRateLimit = true, $maxAttempts = 10)
     {
