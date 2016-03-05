@@ -26,9 +26,11 @@ To set up the echonest API client:
 ```
 $lastfm = new \Chrismou\Echonest(
     new GuzzleHttp\Client(),
-    YOUR_API_KEY,
+    YOUR_API_KEY
 );
 ```
+
+(you can also pass a PSR-7 compliant logger as a third argument - [more details below](#logging))
 
 The format for calls is: `$echonest->query($resource, $method, $parameters, $autoRateLimit, $maxRetries);`, where:
 
@@ -91,6 +93,13 @@ For example:
 ```
 $echonest->query('artist', 'images', ['name' => 'cher'], false);
 ```
+
+## Logging
+Optionally, you can pass a logger as the third constructor argument to the client, as long as it implements the [\Psr\Log](https://github.com/php-fig/log) interface 
+(ie, monolog).  By passing this in, some basic logging will automatically be enabled, logging any errors connecting to Echonest and the reasons (if we have one).
+
+The echonest client assumes the logger has already been properly configured, so you'll need to do this before passing it in.  For more information on 
+configuring Monolog for use with this class, see [the usage documentation](https://github.com/Seldaek/monolog/blob/master/doc/01-usage.md#configuring-a-logger).
 
 ## Tests
 

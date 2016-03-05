@@ -3,6 +3,9 @@ module.exports = function(grunt) {
     grunt.initConfig({
         phpunit: {
             unit: {
+                dir: 'tests/'
+            },
+            unitcoverage: {
                 dir: 'tests/',
                 options: {
                     coverageHtml: 'coverage/html',

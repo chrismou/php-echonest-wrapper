@@ -2,6 +2,9 @@
 
 namespace Chrismou\Echonest;
 
+use GuzzleHttp\ClientInterface;
+use Psr\Log\LoggerInterface;
+
 class Echonest
 {
     /**
@@ -13,6 +16,11 @@ class Echonest
      * @var string
      */
     protected $apiKey;
+
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    protected $logger;
 
     /**
      * @var int
@@ -36,12 +44,14 @@ class Echonest
 
     /**
      * @param \GuzzleHttp\ClientInterface $httpClient
+     * @param \Psr\Log\LoggerInterface $logger
      * @param string $apiKey
      */
-    public function __construct(\GuzzleHttp\ClientInterface $httpClient, $apiKey)
+    public function __construct(ClientInterface $httpClient, $apiKey, LoggerInterface $logger = null)
     {
         $this->httpClient = $httpClient;
         $this->apiKey = $apiKey;
+        $this->logger = $logger;
     }
 
     /**
@@ -80,14 +90,15 @@ class Echonest
                 // If it hasn't thrown an exception, assume it's been successful
                 break;
             } catch (\Exception $e) {
-                // Do nothing
+                $this->writeLog('warning', $e->getMessage());
             }
         }
 
         if (!isset($response)) {
-            throw new \Chrismou\Echonest\Exception\TooManyAttemptsException(
-                "Echonest query abandoned after " . $attempt . " failed attempts"
-            );
+            $message = "Echonest query abandoned after " . $maxAttempts . " failed attempts";
+
+            $this->writeLog('error', $message);
+            throw new \Chrismou\Echonest\Exception\TooManyAttemptsException($message);
         }
 
         $this->setRateLimitData($response);
@@ -133,5 +144,12 @@ class Echonest
         }
 
         return $wait;
+    }
+
+    protected function writeLog($level, $message)
+    {
+        if ($this->logger) {
+            $this->logger->$level($message);
+        }
     }
 }

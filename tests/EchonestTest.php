@@ -12,6 +12,9 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     /** @var \Mockery\MockInterface */
     protected $mockClient;
 
+    /** @var \Mockery\MockInterface */
+    protected $mockLogger;
+
     /** @var \Chrismou\Echonest\Echonest  */
     protected $echonest;
 
@@ -41,8 +44,13 @@ class EchonestTest extends PHPUnit_Framework_TestCase
      */
     public function setUp()
     {
-        $this->mockClient = m::mock('\GuzzleHttp\ClientInterface', [
+        $this->mockClient = m::mock('GuzzleHttp\ClientInterface', [
             'get' => null
+        ]);
+
+        $this->mockLogger = m::mock('Psr\Log\LoggerInterface', [
+            'warning' => null,
+            'error' => null,
         ]);
 
         $this->apiResponse = json_encode(["key" => "value"]);
@@ -124,9 +132,42 @@ class EchonestTest extends PHPUnit_Framework_TestCase
                 )
             );
 
-        $this->echonest->query($this->resource, $this->action, [], true, 2);
+        $this->mockLogger->shouldReceive('warning')
+            ->never();
 
-        //$this->assertEquals(json_decode($this->apiResponse, true), $response);
+        $this->mockLogger->shouldReceive('error')
+            ->never();
+
+        $this->echonest->query($this->resource, $this->action, [], true, 2);
+    }
+
+    /**
+     * @test
+     * @expectedException \Chrismou\Echonest\Exception\TooManyAttemptsException
+     */
+    public function it_logs_errors_when_logger_is_set()
+    {
+        $this->echonest = new Echonest($this->mockClient, $this->apiKey, $this->mockLogger);
+
+        $this->mockClient->shouldReceive('get')
+            ->with($this->buildRequestUrl())
+            ->times(5)
+            ->andThrow(
+                new \GuzzleHttp\Exception\ServerException(
+                    'Internal Server Error',
+                    m::mock('Psr\Http\Message\RequestInterface')
+                )
+            );
+
+        $this->mockLogger->shouldReceive('warning')
+            ->times(5)
+            ->with('Internal Server Error');
+
+        $this->mockLogger->shouldReceive('error')
+            ->once()
+            ->with('Echonest query abandoned after 5 failed attempts');
+
+        $this->echonest->query($this->resource, $this->action, [], true, 5);
     }
 
     /** @test */
