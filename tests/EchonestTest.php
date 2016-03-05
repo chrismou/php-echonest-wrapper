@@ -45,7 +45,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->mockClient = m::mock('GuzzleHttp\ClientInterface', [
-            'get' => null
+            'request' => null
         ]);
 
         $this->mockLogger = m::mock('Psr\Log\LoggerInterface', [
@@ -81,12 +81,40 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     /** @test */
     public function it_makes_a_request()
     {
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->once()
             ->andReturn($this->guzzleResponse);
 
-        $response = $this->echonest->query($this->resource, $this->action);
+        $response = $this->echonest->query('GET', $this->resource, $this->action);
+
+        $this->assertEquals(json_decode($this->apiResponse), $response);
+    }
+
+    /** @test */
+    public function it_correctly_calls_query_when_using_get_shortcut_method()
+    {
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
+            ->once()
+            ->andReturn($this->guzzleResponse);
+
+        $response = $this->echonest->get($this->resource, $this->action);
+
+        $this->assertEquals(json_decode($this->apiResponse), $response);
+    }
+
+    /** @test */
+    public function it_correctly_calls_query_when_using_post_shortcut_method()
+    {
+        $dummyPost = ['param' => 'value'];
+
+        $this->mockClient->shouldReceive('request')
+            ->with('POST', $this->buildRequestUrl(), ['form_params' => $dummyPost])
+            ->once()
+            ->andReturn($this->guzzleResponse);
+
+        $response = $this->echonest->post($this->resource, $this->action, [], $dummyPost);
 
         $this->assertEquals(json_decode($this->apiResponse), $response);
     }
@@ -94,8 +122,8 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     /** @test */
     public function it_retries_a_request_when_exception_is_thrown()
     {
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->once()
             ->andThrow(
                 new \GuzzleHttp\Exception\ServerException(
@@ -104,12 +132,12 @@ class EchonestTest extends PHPUnit_Framework_TestCase
                 )
             );
 
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->once()
             ->andReturn($this->guzzleResponse);
 
-        $response = $this->echonest->query($this->resource, $this->action);
+        $response = $this->echonest->query('GET', $this->resource, $this->action);
 
         $this->assertEquals(json_decode($this->apiResponse), $response);
     }
@@ -122,8 +150,8 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     {
         $this->echonest = new Echonest($this->mockClient, $this->apiKey);
 
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->twice()
             ->andThrow(
                 new \GuzzleHttp\Exception\ServerException(
@@ -138,7 +166,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
         $this->mockLogger->shouldReceive('error')
             ->never();
 
-        $this->echonest->query($this->resource, $this->action, [], true, 2);
+        $this->echonest->query('GET', $this->resource, $this->action, [], [], true, 2);
     }
 
     /**
@@ -149,8 +177,8 @@ class EchonestTest extends PHPUnit_Framework_TestCase
     {
         $this->echonest = new Echonest($this->mockClient, $this->apiKey, $this->mockLogger);
 
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->times(5)
             ->andThrow(
                 new \GuzzleHttp\Exception\ServerException(
@@ -167,21 +195,21 @@ class EchonestTest extends PHPUnit_Framework_TestCase
             ->once()
             ->with('Echonest query abandoned after 5 failed attempts');
 
-        $this->echonest->query($this->resource, $this->action, [], true, 5);
+        $this->echonest->query('GET', $this->resource, $this->action, [], [], true, 5);
     }
 
     /** @test */
     public function it_waits_between_requests()
     {
-        $this->mockClient->shouldReceive('get')
-            ->with($this->buildRequestUrl())
+        $this->mockClient->shouldReceive('request')
+            ->with('GET', $this->buildRequestUrl(), [])
             ->twice()
             ->andReturn($this->guzzleResponse);
 
-        $this->echonest->query($this->resource, $this->action);
+        $this->echonest->query('GET', $this->resource, $this->action);
 
         $start  = new \DateTime();
-        $this->echonest->query($this->resource, $this->action);
+        $this->echonest->query('GET', $this->resource, $this->action);
         $end  = new \DateTime();
 
         $diff = $start->diff($end);

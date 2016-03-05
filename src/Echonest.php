@@ -43,9 +43,9 @@ class Echonest
     protected $apiUrl = 'http://developer.echonest.com/api/v4/';
 
     /**
-     * @param \GuzzleHttp\ClientInterface $httpClient
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param ClientInterface $httpClient
      * @param string $apiKey
+     * @param LoggerInterface|null $logger
      */
     public function __construct(ClientInterface $httpClient, $apiKey, LoggerInterface $logger = null)
     {
@@ -55,39 +55,75 @@ class Echonest
     }
 
     /**
+     * Make a GET request to the Echonest API
+     *
      * @param string $resource
      * @param string $action
-     * @param array $params
+     * @param array $urlParams
+     *
+     * @return array|null
+     * @throws Exception\TooManyAttemptsException
+     */
+    public function get($resource, $action, array $urlParams = [])
+    {
+        return $this->query('GET', $resource, $action, $urlParams, [], []);
+    }
+
+    /**
+     * Make a POST request to the Echonest API
+     *
+     * @param string $resource
+     * @param string $action
+     * @param array $urlParams
+     * @param array $formParms
+     *
+     * @return array|null
+     * @throws Exception\TooManyAttemptsException
+     */
+    public function post($resource, $action, array $urlParams = [], array $formParms = [])
+    {
+        return $this->query('POST', $resource, $action, $urlParams, $formParms);
+    }
+
+    /**
+     * @param string $httpMethod
+     * @param string $resource
+     * @param string $action
+     * @param array $urlParams
+     * @param array $formParams
      * @param bool $autoRateLimit
      * @param int $maxAttempts
      *
-     * @return mixed
+     * @return array|null
      * @throws Exception\TooManyAttemptsException
      */
-    public function query($resource, $action, array $params = [], $autoRateLimit = true, $maxAttempts = 10)
-    {
-        if (!isset($params['apiKey'])) {
-            $params['api_key'] = $this->apiKey;
-        }
-
-        $encodedParams = preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($params));
-
-        $requestUrl = sprintf(
-            '%s%s/%s?%s',
-            $this->apiUrl,
-            $resource,
-            $action,
-            $encodedParams
-        );
-
+    public function query(
+        $httpMethod,
+        $resource,
+        $action,
+        array $urlParams = [],
+        array $formParams = [],
+        $autoRateLimit = true,
+        $maxAttempts = 10
+    ) {
         if ($autoRateLimit) {
             usleep($this->getRateLimitDelay());
         }
 
+        $options = [];
+
+        if (count($formParams)) {
+            $options['form_params'] = $formParams;
+        }
+
         for ($attempt=1; $attempt<=$maxAttempts; $attempt++) {
             try {
-                $response = $this->doRequest($requestUrl);
-                // If it hasn't thrown an exception, assume it's been successful
+                $response = $this->doRequest(
+                    $httpMethod,
+                    $this->buildRequestUrl($resource, $action, $urlParams),
+                    $options
+                );
+                // If it hasn't thrown an exception, we can assume it's been successful
                 break;
             } catch (\Exception $e) {
                 $this->writeLog('warning', $e->getMessage());
@@ -107,18 +143,25 @@ class Echonest
     }
 
     /**
+     * @param string $httpMethod
      * @param string $requestUrl
-     * @return \GuzzleHttp\Psr7\Response
+     * @param array $options
+     *
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    protected function doRequest($requestUrl)
+    protected function doRequest($httpMethod, $requestUrl, array $options)
     {
-        return $this->httpClient->get($requestUrl);
+        return $this->httpClient->request(
+            $httpMethod,
+            $requestUrl,
+            $options
+        );
     }
 
     /**
-     * @param \GuzzleHttp\Psr7\Response $response
+     * @param \Psr\Http\Message\ResponseInterface
      */
-    protected function setRateLimitData(\GuzzleHttp\Psr7\Response $response)
+    protected function setRateLimitData(\Psr\Http\Message\ResponseInterface $response)
     {
         $this->rateLimit = (int) $response->getHeader('x-ratelimit-limit');
         $this->rateLimitRemaining = (int) $response->getHeader('x-ratelimit-remaining');
@@ -146,6 +189,34 @@ class Echonest
         return $wait;
     }
 
+    /**
+     * @param string $resource
+     * @param string $action
+     * @param array $urlParams
+     *
+     * @return string
+     */
+    protected function buildRequestUrl($resource, $action, array $urlParams = [])
+    {
+        if (!isset($urlParams['apiKey'])) {
+            $urlParams['api_key'] = $this->apiKey;
+        }
+
+        $encodedParams = preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($urlParams));
+
+        return sprintf(
+            '%s%s/%s?%s',
+            $this->apiUrl,
+            $resource,
+            $action,
+            $encodedParams
+        );
+    }
+
+    /**
+     * @param string $level
+     * @param string $message
+     */
     protected function writeLog($level, $message)
     {
         if ($this->logger) {

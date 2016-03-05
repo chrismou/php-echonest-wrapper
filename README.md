@@ -6,8 +6,8 @@
 
 A dead simple wrapper class for the echonest API.
 
-Includes options for max number of attempts before giving up, and a auto rate limiter, which spaces out requests based 
-on the number of API requests remaining for that minute (which is included in the echonest response headers).
+Includes support for Guzzle 6, options for max number of attempts before giving up, and a auto rate limiter which spaces out requests based 
+on the number of API requests remaining for that minute.
 
 ## Install
 
@@ -30,33 +30,39 @@ $lastfm = new \Chrismou\Echonest(
 );
 ```
 
-(you can also pass a PSR-7 compliant logger as a third argument - [more details below](#logging))
+(you can also pass a PSR-3 compliant logger as a third argument - [see below for more details](#logging))
 
-The format for calls is: `$echonest->query($resource, $method, $parameters, $autoRateLimit, $maxRetries);`, where:
+### GET requests
 
-* **resource** is the specific Echonest resource you're querying (ie, 'artist', 'genre', 'song')
-* **method** is the method specific to the resource you're calling (ie, 'search', 'profile', 'images')
-* **parameters** (optional) are the are the parameters specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
-* **autoRateLimit** (optional) whether to let the wrapper manage rate limiting ([see below](#rate-limiting))
-* **maxRetries** (optional) how many times to attempt a request before giving up
+In most cases, this is the only method you'll need to use.  
+
+Virtually all requests to Echonest are GET requests, so the simplest way to use this client is to use the `get` helper function.  The format for this is:
+
+```
+$echonest->get($resource, $action, $urlParameters);
+```
+
+* **resource** -  the specific Echonest resource you're querying (ie, 'artist', 'genre', 'song')
+* **action** - the method specific to the resource you're calling (ie, 'search', 'profile', 'images')
+* **urlParameters** (optional) - an array of URL parameters, as specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
 
 So, if you wanted to get all images for Cher, you could run:
 
 ```
-$echonest->query('artist', 'images', ['name' => 'cher']);
+$echonest->get('artist', 'images', ['name' => 'cher']);
 ```
 
 Or if you wanted Artist by a specific genre, you could run:
 
 ```
-$echonest->query('genre', 'artists', ['name' => 'rock']);
+$echonest->get('genre', 'artists', ['name' => 'rock']);
 ```
 
 You can also specify 'buckets' as a way of returning multiple sets of data within the same API query.  To request them in the request, 
 you can do the following:
 
 ```
-$echonest->query(
+$echonest->get(
     'artist',
     'search',
     [
@@ -70,6 +76,35 @@ $echonest->query(
     ]
 );
 ```
+
+### POST requests
+
+A couple of the Echonest endpoints require a POST requests:
+
+```
+$echonest->post($resource, $action, $urlParameters, $formParameters);
+```
+
+* **resource** -  the specific Echonest resource you're querying (ie, 'artist', 'genre', 'song')
+* **action** - the method specific to the resource you're calling (ie, 'search', 'profile', 'images')
+* **urlParameters** (optional) - an array of URL parameters, as specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
+* **formParameters** (optional) - an array of form parameters to be used in POST requests
+
+### Building a custom request
+
+In some cases, you may want to take advantage of the extra options. The format for these requests is as follows:
+
+```
+$echonest->query($httpMethod, $resource, $action, $urlParameters, $formParameters, $autoRateLimit, $maxRetries);
+```
+
+* **httpMethod** - the method to use, ie GET or POST
+* **resource** -  the specific Echonest resource you're querying (ie, 'artist', 'genre', 'song')
+* **action** - the method specific to the resource you're calling (ie, 'search', 'profile', 'images')
+* **urlParameters** (optional) - an array of URL parameters, as specified in the [API documentation](http://developer.echonest.com/docs/v4) for that endpoint.
+* **formParameters** (optional) - an array of form parameters to be used in POST requests
+* **autoRateLimit** (optional) - whether to let the wrapper manage rate limiting ([see below](#rate-limiting))
+* **maxRetries** (optional) - how many times to attempt a request before giving up and moving on
 
 Refer to the [Echonest API documentation](http://developer.echonest.com/docs/v4) for a full list of available endpoints, parameters, buckets
 and example responses. This wrapper is designed to support virtually all endpoints out of the box, so you should be safe to 
@@ -95,8 +130,8 @@ $echonest->query('artist', 'images', ['name' => 'cher'], false);
 ```
 
 ## Logging
-Optionally, you can pass a logger as the third constructor argument to the client, as long as it implements the [\Psr\Log](https://github.com/php-fig/log) interface 
-(ie, monolog).  By passing this in, some basic logging will automatically be enabled, logging any errors connecting to Echonest and the reasons (if we have one).
+Optionally, you can pass a PSR-3 compliant logger as the third constructor argument to the client, as long as it implements the [\Psr\Log](https://github.com/php-fig/log) interface 
+(ie, [Monolog](https://github.com/Seldaek/monolog)).  By passing this in, some basic logging will automatically be enabled, such a the reason for connection failures, etc.
 
 The echonest client assumes the logger has already been properly configured, so you'll need to do this before passing it in.  For more information on 
 configuring Monolog for use with this class, see [the usage documentation](https://github.com/Seldaek/monolog/blob/master/doc/01-usage.md#configuring-a-logger).
