@@ -61,7 +61,7 @@ class Echonest
      * @param string $action
      * @param array $urlParams
      *
-     * @return array|null
+     * @return \stdClass|null
      * @throws Exception\TooManyAttemptsException
      */
     public function get($resource, $action, array $urlParams = [])
@@ -77,7 +77,7 @@ class Echonest
      * @param array $urlParams
      * @param array $formParms
      *
-     * @return array|null
+     * @return \stdClass|null
      * @throws Exception\TooManyAttemptsException
      */
     public function post($resource, $action, array $urlParams = [], array $formParms = [])
@@ -94,7 +94,7 @@ class Echonest
      * @param bool $autoRateLimit
      * @param int $maxAttempts
      *
-     * @return array|null
+     * @return \stdClass|null
      * @throws Exception\TooManyAttemptsException
      */
     public function query(
