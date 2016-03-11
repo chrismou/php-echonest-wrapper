@@ -64,9 +64,9 @@ class Echonest
      * @return \stdClass|null
      * @throws Exception\TooManyAttemptsException
      */
-    public function get($resource, $action, array $urlParams = [])
+    public function get($resource, $action, array $params = [])
     {
-        return $this->query('GET', $resource, $action, $urlParams, [], []);
+        return $this->query('GET', $resource, $action, $params);
     }
 
     /**
@@ -80,9 +80,9 @@ class Echonest
      * @return \stdClass|null
      * @throws Exception\TooManyAttemptsException
      */
-    public function post($resource, $action, array $urlParams = [], array $formParms = [])
+    public function post($resource, $action, array $params = [])
     {
-        return $this->query('POST', $resource, $action, $urlParams, $formParms);
+        return $this->query('POST', $resource, $action, $params);
     }
 
     /**
@@ -101,8 +101,8 @@ class Echonest
         $httpMethod,
         $resource,
         $action,
-        array $urlParams = [],
-        array $formParams = [],
+        array $params = [],
+        array $guzzleOptions = [],
         $autoRateLimit = true,
         $maxAttempts = 10
     ) {
@@ -112,9 +112,14 @@ class Echonest
 
         $options = [];
 
-        if (count($formParams)) {
-            $options['form_params'] = $formParams;
+        if (strtolower($httpMethod) === 'post') {
+            $options['form_params'] = $params;
+            $urlParams = [];
+        } else {
+            $urlParams = $params;
         }
+
+        $options = array_merge($guzzleOptions, $options);
 
         for ($attempt=1; $attempt<=$maxAttempts; $attempt++) {
             try {
@@ -202,6 +207,8 @@ class Echonest
             $urlParams['api_key'] = $this->apiKey;
         }
 
+        // Echonest accept a non standard querystring (ie, multiple "bucket" parameters)
+        // Build a querystring here, then strip out the index numbers
         $encodedParams = preg_replace('/%5B[0-9]+%5D/simU', '', http_build_query($urlParams));
 
         return sprintf(

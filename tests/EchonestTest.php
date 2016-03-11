@@ -114,7 +114,7 @@ class EchonestTest extends PHPUnit_Framework_TestCase
             ->once()
             ->andReturn($this->guzzleResponse);
 
-        $response = $this->echonest->post($this->resource, $this->action, [], $dummyPost);
+        $response = $this->echonest->post($this->resource, $this->action, $dummyPost);
 
         $this->assertEquals(json_decode($this->apiResponse), $response);
     }
