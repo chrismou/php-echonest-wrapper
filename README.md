@@ -24,7 +24,7 @@ First you need an Echonest API key.  You can obtain one by signing up here: [htt
 To set up the echonest API client:
 
 ```
-$lastfm = new \Chrismou\Echonest(
+$lastfm = new \Chrismou\Echonest\Echonest(
     new GuzzleHttp\Client(),
     YOUR_API_KEY
 );
