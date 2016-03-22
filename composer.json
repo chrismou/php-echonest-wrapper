@@ -1,6 +1,6 @@
 {
     "name": "chrismou/echonest",
-    "description": "A simple but fully featured PHP wrapper for the Echonest API, with auto rate limiting and Guzzle 6 support",
+    "description": "A simple but fully featured Echonest API wrapper, with auto rate limiting and Guzzle 6 support",
     "type": "library",
     "license": "MIT",
     "authors": [
