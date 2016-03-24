@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/chrismou/php-echonest-wrapper.svg?branch=master)](https://travis-ci.org/chrismou/php-echonest-wrapper)
 [![Test Coverage](https://codeclimate.com/github/chrismou/php-echonest-wrapper/badges/coverage.svg)](https://codeclimate.com/github/chrismou/php-echonest-wrapper/coverage)
 [![Code Climate](https://codeclimate.com/github/chrismou/php-echonest-wrapper/badges/gpa.svg)](https://codeclimate.com/github/chrismou/php-echonest-wrapper)
+[![Buy me a beer](https://img.shields.io/badge/donate-PayPal-019CDE.svg)](https://www.paypal.me/chrismou)
 
 A dead simple wrapper class for the echonest API.
 
